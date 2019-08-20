@@ -1,0 +1,60 @@
+[global_tags]
+clientID = "{{environmentName}}"
+[agent]
+interval = "{{telegraf.interval}}"
+round_interval = true
+
+metric_batch_size = 1000
+
+metric_buffer_limit = 10000
+
+collection_jitter = "0s"
+
+flush_interval = "{{telegraf.flush_interval}}"
+
+flush_jitter = "0s"
+
+precision = ""
+
+debug = false
+quiet = false
+logfile = ""
+
+hostname = ""
+omit_hostname = false
+
+###############################################################################
+#                            OUTPUT PLUGINS                                   #
+###############################################################################
+[[outputs.influxdb]]
+  urls = ["https://{{stats.url}}:{{stats.port}}"] # required
+  database = "ingestor_{{stats.db}}" # required
+  username = "{{stats.user}}"
+  password = "{{stats.password}}"
+  retention_policy = ""
+  write_consistency = "any"
+  timeout = "5s"
+
+
+
+[[inputs.cloudwatch]]
+  namespace = "AWS/ES" #required NameSpace
+  region = "{{region}}" # required "us-east-2"
+  period = "2m" #aggregation period start-end time
+  delay = "2m" #deploy to allow metric availability on CW
+  interval = "2m" #multiple of period; how frequent to collect
+  ratelimit = 10 #number of req per sec
+
+  statistic_include = ["average"] #sum, minimum, maximum
+
+  #Select metrics to pull from cw
+  [[inputs.cloudwatch.metrics]]
+    names = ["ClusterStatus.green", "2xx", "3xx", "4xx", "5xx", "ClusterStatus.yellow", "ClusterStatus.red"]
+
+    #Mandatory metric dimension
+    [[inputs.cloudwatch.metrics.dimensions]]
+        name = "DomainName"
+        value = "*"
+    [[inputs.cloudwatch.metrics.dimensions]]
+        name = "ClientId"
+        value = "*"

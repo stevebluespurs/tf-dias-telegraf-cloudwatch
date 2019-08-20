@@ -1,0 +1,15 @@
+#Terraform code to create telegraf instances
+#run boot-up script to install telegraf
+
+Steps to create apache instances :
+1. Create a new user with the right IAM access and generate keys
+2. Update the secrets.tfvars file with the keys generated in step 2
+3. Ensure the right key-pair is used
+4. Make sure terrform is installed on your local machine and is set in your path
+5. Update variables.tf in telegraf folder
+5. run the terraform script :
+   $ ./terraform.sh
+
+Steps to destroy apache instances :
+1. Run the terraform destroy script :
+   $ ./terraform-destroy.sh
