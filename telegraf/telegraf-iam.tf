@@ -38,7 +38,16 @@ resource "aws_iam_role_policy" "telegraf_cw_policy" {
         "cloudwatch:List*"
       ],
       "Effect": "Allow",
-      "Resource": "*",
+      #"Resource": "*",
+      "Principal" : {
+        "AWS" : "" #AWS ACCOUNT NUMBER of Influxdb
+      },
+      "Condition": {"IpAddress": {"aws:SourceIp": [
+        "public-ip/32",
+        "",
+        ""
+      ]}},
+      "Resource": ["arn:aws:cloudwatch:us-east-1:<account_id>:*"],
       "Sid": "TelegrafCloudWatchPolicy"
     }
   ]
