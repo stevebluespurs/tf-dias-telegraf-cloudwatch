@@ -62,7 +62,7 @@ omit_hostname = false
 
   #Select metrics to pull from cw
   [[inputs.cloudwatch.metrics]]
-    names = ["ClusterStatus.green", "2xx", "3xx", "4xx", "5xx", "ClusterStatus.yellow", "ClusterStatus.red"]
+    names = ["ClusterStatus.green", "2xx", "3xx", "4xx", "5xx", "ClusterStatus.yellow", "ClusterStatus.red","CPUUtilization","FreeStorageSpace","ClusterUsedSpace","JVMMemoryPressure","ElasticsearchRequests","RequestCount","ClusterIndexWritesBlocked"]
     #statistic_include = ["average"] #sum, minimum, maximum
 
     #Mandatory metric dimension
@@ -82,3 +82,41 @@ omit_hostname = false
    #statistic_include = ["average"] #sum, minimum, maximum
    [inputs.cloudwatch.tags]
      influxdb_cw = "lambda"
+   [[inputs.cloudwatch.metrics]]
+     names = ["Invocations","Errors","Duration","Throttles"]
+
+[[inputs.cloudwatch]]
+  namespace = "AWS/SQS" #required NameSpace
+  region = "{{region}}" # required "us-east-2"
+  period = "1m" #aggregation period start-end time
+  interval = "1m" #multiple of period; how frequent to collect
+  ratelimit = 10 #number of req per sec
+  #statistic_include = ["average"] #sum, minimum, maximum
+  [inputs.cloudwatch.tags]
+    influxdb_cw = "sqs"
+  [[inputs.cloudwatch.metrics]]
+    names = ["ApproximateAgeOfOldestMessage","ApproximateNumberOfMessagesDelayed","ApproximateNumberOfMessagesNotVisible","ApproximateNumberOfMessagesVisible","NumberOfMessagesSent"]
+    #Mandatory metric dimension
+    [[inputs.cloudwatch.metrics.dimensions]]
+        name = "QueueName"
+        value = "sqs_automation_queue_to_parameters_qax" #"sqs_automation_queue_to_parameters_{{environment}}"
+
+[[inputs.cloudwatch]]
+   namespace = "AWS/S3" #required NameSpace
+   region = "{{region}}" # required "us-east-2"
+   period = "24h" #aggregation period start-end time - only 24hrs for S3
+   interval = "5m" #multiple of period; how frequent to collect
+   ratelimit = 20 #number of req per sec
+   #statistic_include = ["average"] #sum, minimum, maximum
+   [inputs.cloudwatch.tags]
+     influxdb_cw = "s3"
+   [[inputs.cloudwatch.metrics]]
+     names = ["BucketSizeBytes","NumberOfObjects"]
+
+     #Mandatory metric dimension
+     [[inputs.cloudwatch.metrics.dimensions]]
+         name = "BucketName"
+         value = "*"
+     [[inputs.cloudwatch.metrics.dimensions]]
+         name = "StorageType"
+         value = "*" #StandardStorage
