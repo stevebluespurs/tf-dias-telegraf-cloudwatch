@@ -28,7 +28,7 @@ omit_hostname = false
 ###############################################################################
 [[outputs.influxdb]]
   urls = ["https://{{stats.url}}:{{stats.port}}"] # required
-  database = "ingestor_{{stats.db}}" # required
+  database = "ingestor_{{stats.db}}" # required change to es
   username = "{{stats.user}}"
   password = "{{stats.password}}"
   retention_policy = ""
@@ -40,7 +40,7 @@ omit_hostname = false
 
 [[outputs.influxdb]]
   urls = ["https://{{stats.url}}:{{stats.port}}"] # required
-  database = "ingestor_{{stats.db}}" # required
+  database = "ingestor_{{stats.db}}" # required change to lambda
   username = "{{stats.user}}"
   password = "{{stats.password}}"
   retention_policy = ""
@@ -49,6 +49,30 @@ omit_hostname = false
   tagexclude = ["influxdb_cw"]
   [outputs.influxdb.tagpass]
     influxdb_cw = ["lambda"]
+
+[[outputs.influxdb]]
+  urls = ["https://{{stats.url}}:{{stats.port}}"] # required
+  database = "ingestor_{{stats.db}}" # required change to s3
+  username = "{{stats.user}}"
+  password = "{{stats.password}}"
+  retention_policy = ""
+  write_consistency = "any"
+  timeout = "5s"
+  tagexclude = ["influxdb_cw"]
+  [outputs.influxdb.tagpass]
+    influxdb_cw = ["s3"]
+
+[[outputs.influxdb]]
+  urls = ["https://{{stats.url}}:{{stats.port}}"] # required
+  database = "ingestor_{{stats.db}}" # required change to sqs
+  username = "{{stats.user}}"
+  password = "{{stats.password}}"
+  retention_policy = ""
+  write_consistency = "any"
+  timeout = "5s"
+  tagexclude = ["influxdb_cw"]
+  [outputs.influxdb.tagpass]
+    influxdb_cw = ["sqs"]
 
 
 [[inputs.cloudwatch]]
