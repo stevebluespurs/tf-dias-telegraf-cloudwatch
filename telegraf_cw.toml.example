@@ -28,28 +28,66 @@ omit_hostname = false
 ###############################################################################
 [[outputs.influxdb]]
   urls = ["https://{{stats.url}}:{{stats.port}}"] # required
-  database = "ingestor_{{stats.db}}" # required
+  database = "ingestor_{{stats.db}}" # required change to es
   username = "{{stats.user}}"
   password = "{{stats.password}}"
   retention_policy = ""
   write_consistency = "any"
   timeout = "5s"
+  tagexclude = ["influxdb_cw"]
+  [outputs.influxdb.tagpass]
+    influxdb_cw = ["elastic"]
 
+[[outputs.influxdb]]
+  urls = ["https://{{stats.url}}:{{stats.port}}"] # required
+  database = "ingestor_{{stats.db}}" # required change to lambda
+  username = "{{stats.user}}"
+  password = "{{stats.password}}"
+  retention_policy = ""
+  write_consistency = "any"
+  timeout = "5s"
+  tagexclude = ["influxdb_cw"]
+  [outputs.influxdb.tagpass]
+    influxdb_cw = ["lambda"]
+
+[[outputs.influxdb]]
+  urls = ["https://{{stats.url}}:{{stats.port}}"] # required
+  database = "ingestor_{{stats.db}}" # required change to s3
+  username = "{{stats.user}}"
+  password = "{{stats.password}}"
+  retention_policy = ""
+  write_consistency = "any"
+  timeout = "5s"
+  tagexclude = ["influxdb_cw"]
+  [outputs.influxdb.tagpass]
+    influxdb_cw = ["s3"]
+
+[[outputs.influxdb]]
+  urls = ["https://{{stats.url}}:{{stats.port}}"] # required
+  database = "ingestor_{{stats.db}}" # required change to sqs
+  username = "{{stats.user}}"
+  password = "{{stats.password}}"
+  retention_policy = ""
+  write_consistency = "any"
+  timeout = "5s"
+  tagexclude = ["influxdb_cw"]
+  [outputs.influxdb.tagpass]
+    influxdb_cw = ["sqs"]
 
 
 [[inputs.cloudwatch]]
   namespace = "AWS/ES" #required NameSpace
   region = "{{region}}" # required "us-east-2"
-  period = "2m" #aggregation period start-end time
-  delay = "2m" #deploy to allow metric availability on CW
-  interval = "2m" #multiple of period; how frequent to collect
+  period = "1m" #aggregation period start-end time
+  interval = "1m" #multiple of period; how frequent to collect
   ratelimit = 10 #number of req per sec
-
-  statistic_include = ["average"] #sum, minimum, maximum
+  [inputs.cloudwatch.tags]
+    influxdb_cw = "elastic"
 
   #Select metrics to pull from cw
   [[inputs.cloudwatch.metrics]]
-    names = ["ClusterStatus.green", "2xx", "3xx", "4xx", "5xx", "ClusterStatus.yellow", "ClusterStatus.red"]
+    names = ["ClusterStatus.green", "2xx", "3xx", "4xx", "5xx", "ClusterStatus.yellow", "ClusterStatus.red","CPUUtilization","FreeStorageSpace","ClusterUsedSpace","JVMMemoryPressure","ElasticsearchRequests","RequestCount","ClusterIndexWritesBlocked"]
+    #statistic_include = ["average"] #sum, minimum, maximum
 
     #Mandatory metric dimension
     [[inputs.cloudwatch.metrics.dimensions]]
@@ -58,3 +96,51 @@ omit_hostname = false
     [[inputs.cloudwatch.metrics.dimensions]]
         name = "ClientId"
         value = "*"
+
+[[inputs.cloudwatch]]
+   namespace = "AWS/Lambda" #required NameSpace
+   region = "{{region}}" # required "us-east-2"
+   period = "1m" #aggregation period start-end time
+   interval = "1m" #multiple of period; how frequent to collect
+   ratelimit = 10 #number of req per sec
+   #statistic_include = ["average"] #sum, minimum, maximum
+   [inputs.cloudwatch.tags]
+     influxdb_cw = "lambda"
+   [[inputs.cloudwatch.metrics]]
+     names = ["Invocations","Errors","Duration","Throttles"]
+
+[[inputs.cloudwatch]]
+  namespace = "AWS/SQS" #required NameSpace
+  region = "{{region}}" # required "us-east-2"
+  period = "1m" #aggregation period start-end time
+  interval = "1m" #multiple of period; how frequent to collect
+  ratelimit = 10 #number of req per sec
+  #statistic_include = ["average"] #sum, minimum, maximum
+  [inputs.cloudwatch.tags]
+    influxdb_cw = "sqs"
+  [[inputs.cloudwatch.metrics]]
+    names = ["ApproximateAgeOfOldestMessage","ApproximateNumberOfMessagesDelayed","ApproximateNumberOfMessagesNotVisible","ApproximateNumberOfMessagesVisible","NumberOfMessagesSent"]
+    #Mandatory metric dimension
+    [[inputs.cloudwatch.metrics.dimensions]]
+        name = "QueueName"
+        value = "sqs_automation_queue_to_parameters_qax" #"sqs_automation_queue_to_parameters_{{environment}}"
+
+[[inputs.cloudwatch]]
+   namespace = "AWS/S3" #required NameSpace
+   region = "{{region}}" # required "us-east-2"
+   period = "24h" #aggregation period start-end time - only 24hrs for S3
+   interval = "5m" #multiple of period; how frequent to collect
+   ratelimit = 20 #number of req per sec
+   #statistic_include = ["average"] #sum, minimum, maximum
+   [inputs.cloudwatch.tags]
+     influxdb_cw = "s3"
+   [[inputs.cloudwatch.metrics]]
+     names = ["BucketSizeBytes","NumberOfObjects"]
+
+     #Mandatory metric dimension
+     [[inputs.cloudwatch.metrics.dimensions]]
+         name = "BucketName"
+         value = "*"
+     [[inputs.cloudwatch.metrics.dimensions]]
+         name = "StorageType"
+         value = "*" #StandardStorage
